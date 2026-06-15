@@ -7,21 +7,21 @@ Script has many universal and targeted features:
 | Universal | Slap Battles | Build a Boat for Treasure |
 | :--- | :--- | :--- |
 | • Esp | • Teleport to Elude | • Gold Autofarm |
-| • Walkspeed | • Teleport to Frostbite | •  |
-| • Jump Power | • Teleport to Frostbite orb | •  |
-| • Fly | • Get Icescate | •  |
-| • Noclip | • Get Elude+Counter | •  |
-| • Wall Walk | • Get Lamp | •  |
-| • Infinite Jump | • Get Plank | •  |
-| • Anti-Knockback | • Spam Fort | •  |
-| • Teleport | • Farm Slapples | •  |
-| • Baseplate | • Anti-Ragdoll | •  |
-| • Cursor XYZ | • Функция | •  |
-| • Player XYZ | • Функция | •  |
-| • Get PlaceID | • Функция | •  |
-| • Show fps | • Функция | • Функция |
-| • Show ping | • Функция | • Функция |
-| • Show ping+fps | • Функция | • Функция |
-| • Fps cap | • Функция | • Функция |
-| • Autoclicker | • Функция | • Функция |
-| • XY clicker | • Функция | • Функция |
+| • Walkspeed | • Teleport to Frostbite |
+| • Jump Power | • Teleport to Frostbite orb |
+| • Fly | • Get Icescate |
+| • Noclip | • Get Elude+Counter |
+| • Wall Walk | • Get Lamp |
+| • Infinite Jump | • Get Plank |
+| • Anti-Knockback | • Spam Fort |
+| • Teleport | • Farm Slapples |
+| • Baseplate | • Anti-Ragdoll |
+| • Cursor XYZ |
+| • Player XYZ |
+| • Get PlaceID |
+| • Show fps |
+| • Show ping |
+| • Show ping+fps |
+| • Fps cap |
+| • Autoclicker |
+| • XY clicker |
