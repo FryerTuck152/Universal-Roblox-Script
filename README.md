@@ -9,7 +9,7 @@ Script has both universal features and targeted at specific games. Script was te
 **Launching**
 
 ```lua
-loadstring(game:HttpGet('https://raw.githubusercontent.com/FryerTuck152/Universal-Roblox/main/Release%201.0.lua'))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/FryerTuck152/Universal-Roblox-Script/main/Release%201.0.lua"))()
 ```
 
 **Functionality**
