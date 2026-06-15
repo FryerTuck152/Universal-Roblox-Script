@@ -37,6 +37,8 @@ Script has many universal and targeted features:
 | • Autoclicker |
 | • XY clicker |
 
+Script also integrates Infinity Yield, Simple Spy, Hydroxide
+
 **License**
 
 Project is protected with GNU GPLv3 license. You can share and modify code, but author is not responsible for using this project. It can be shared, modified, but author doesn`t want code to be obfuscated, it must not be used for scamming or earning money.
