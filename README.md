@@ -1,12 +1,12 @@
-`**Universal Roblox Script**`
+**Universal Roblox Script**
 
-This script was mainly coded with using artificial inteligence, any bugs or anticheat detects can be possible with this script. The author is not responsible for the use of their code.
+This script was mainly coded with using artificial inteligence, any bugs or anticheat detects can be possible with this script. The author is not responsible for the use of their code. Any 
 
-`**Game compatibility**`
+`**Game compatibility**
 
 Script has both universal features and targeted at specific games. Script was tested in Multicrew Tank Combat, Slap Battles, Build a Boat for Treasure and some random ragdoll games.
 
-`**Functionality**`
+**Functionality**
 
 Script has many universal and targeted features:
 | Universal | Slap Battles | Build a Boat for Treasure |
@@ -31,6 +31,6 @@ Script has many universal and targeted features:
 | • Autoclicker |
 | • XY clicker |
 
-`**License**`
+**License**
 
 Project is protected with GNU GPLv3 license. You can share and modify code, but author is not responsible for using this project. It can be shared, modified, but author doesn`t want code to be obfuscated, it must not be used for scamming or earning money.
