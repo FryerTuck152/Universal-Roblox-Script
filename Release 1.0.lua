@@ -245,6 +245,40 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 getgenv().CheatMenu_Gui = ScreenGui
 
+local function isShiftLockOptionEnabled()
+    local enabled = false
+    pcall(function()
+        local settings = UserSettings()
+        if settings then
+            local gameSettings = settings.GameSettings or settings:GetService("UserGameSettings")
+            if gameSettings then
+                enabled = (gameSettings.ControlMode == Enum.ControlMode.MouseLockSwitch)
+            end
+        end
+    end)
+    return enabled
+end
+
+local function getMouseLockController()
+    local controller = nil
+    pcall(function()
+        local playerScripts = LocalPlayer:FindFirstChild("PlayerScripts")
+        if playerScripts then
+            local playerModule = require(playerScripts:FindFirstChild("PlayerModule"))
+            if playerModule then
+                if type(playerModule.GetCameras) == "function" then
+                    local cameras = playerModule:GetCameras()
+                    controller = cameras and cameras.activeMouseLockController
+                end
+                if not controller and playerModule.CameraModule then
+                    controller = playerModule.CameraModule.activeMouseLockController or playerModule.CameraModule.MouseLockController
+                end
+            end
+        end
+    end)
+    return controller
+end
+
 local _lastMouseBehavior = UserInputService.MouseBehavior
 local _lastMouseIcon = UserInputService.MouseIconEnabled
 local menuIsOpen = true
@@ -295,6 +329,22 @@ local function onMenuToggle(isOpening)
         ScreenGui.Parent = nil
         local restoreBehavior = _lastMouseBehavior
         local restoreIcon = _lastMouseIcon
+        
+        if restoreBehavior == Enum.MouseBehavior.LockCenter then
+            if not isShiftLockOptionEnabled() then
+                restoreBehavior = Enum.MouseBehavior.Default
+            else
+                local controller = getMouseLockController()
+                local isEnabled = false
+                if controller and type(controller.enabled) == "boolean" then
+                    isEnabled = controller.enabled
+                end
+                if not isEnabled then
+                    restoreBehavior = Enum.MouseBehavior.Default
+                end
+            end
+        end
+
         task.wait()
         if _menuToken ~= myToken then return end
         UserInputService.MouseBehavior = restoreBehavior
@@ -501,6 +551,17 @@ local function createSwitch(parent, name, defaultState, order, callback)
     return container, switchBg, switchKnob
 end
 
+local function findAncestorScrollingFrame(obj)
+    local current = obj
+    while current do
+        if current:IsA("ScrollingFrame") then
+            return current
+        end
+        current = current.Parent
+    end
+    return nil
+end
+
 -- Shared slider update: 1 RenderStepped loop for ALL sliders instead of one per slider
 local _sliderRegistry = {}
 local _sliderDragging = false
@@ -527,8 +588,19 @@ end)
 
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+    local wasDragging = false
     for _, s in ipairs(_sliderRegistry) do
-        s.dragging = false
+        if s.dragging then
+            wasDragging = true
+            s.dragging = false
+            local scroller = findAncestorScrollingFrame(s.bg)
+            if scroller then
+                scroller.ScrollingEnabled = true
+            end
+        end
+    end
+    if wasDragging then
+        _sliderDragging = false
     end
 end)
 
@@ -618,7 +690,14 @@ local function createSlider(parent, name, default, order, isColor, isShade, call
     local s = {dragging = false, bg = sliderBg, fill = fill, marker = marker,
                minVal = minVal, maxVal = maxVal, vbox = valueBox, cb = callback}
     table.insert(_sliderRegistry, s)
-    sliderBg.MouseButton1Down:Connect(function() s.dragging = true end)
+    sliderBg.MouseButton1Down:Connect(function()
+        s.dragging = true
+        _sliderDragging = true
+        local scroller = findAncestorScrollingFrame(sliderBg)
+        if scroller then
+            scroller.ScrollingEnabled = false
+        end
+    end)
 
     if valueBox then
         valueBox.FocusLost:Connect(function()
@@ -1312,6 +1391,108 @@ createSwitch(SlapContainer, "Anti-Ragdoll", false, 13, function(val)
 end)
 --------------------------------------------------------------------------------
 
+createSubcategoryHeader(SlapContainer, "Spoof", 14)
+
+do
+    local Workspace = game:GetService("Workspace")
+    local RealCoreGui = game:GetService("CoreGui")
+    local maskActive = false
+    local originalTexts = {}
+    local loopThread = nil
+
+    local function maskElement(object, isOverhead)
+        if not (object:IsA("TextLabel") or object:IsA("TextButton")) then return end
+
+        local currentText = object.Text
+        if currentText == "---" or currentText == "" then return end
+
+        local shouldMask = false
+
+        -- 1. Проверяем на никнеймы игроков
+        for _, player in ipairs(Players:GetPlayers()) do
+            if isOverhead then
+                if string.find(currentText, player.Name) or string.find(currentText, player.DisplayName) then
+                    shouldMask = true
+                    break
+                end
+            else
+                if currentText == player.Name or currentText == player.DisplayName then
+                    shouldMask = true
+                    break
+                end
+            end
+        end
+
+        -- 2. Проверяем на количество шлепок (только для Таблицы)
+        if not shouldMask and not isOverhead then
+            local cleanedText = currentText:gsub("[,%s]", "")
+            local numericPart = cleanedText:gsub("[kMBy%+]$", "")
+            if tonumber(numericPart) ~= nil then
+                shouldMask = true
+            end
+        end
+
+        if shouldMask then
+            if not originalTexts[object] then
+                originalTexts[object] = currentText
+            end
+            object.Text = "---"
+        end
+    end
+
+    local function startMasking()
+        maskActive = true
+
+        loopThread = task.spawn(function()
+            while maskActive do
+                -- Scan PlayerList in CoreGui
+                local playerList = RealCoreGui:FindFirstChild("PlayerList")
+                if not playerList then
+                    local robloxGui = RealCoreGui:FindFirstChild("RobloxGui")
+                    playerList = robloxGui and robloxGui:FindFirstChild("PlayerList")
+                end
+                if playerList then
+                    for _, descendant in ipairs(playerList:GetDescendants()) do
+                        if not maskActive then break end
+                        maskElement(descendant, false)
+                    end
+                end
+
+                -- Scan Player Characters in Workspace
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if not maskActive then break end
+                    local char = player.Character
+                    if char then
+                        for _, descendant in ipairs(char:GetDescendants()) do
+                            if not maskActive then break end
+                            maskElement(descendant, true)
+                        end
+                    end
+                end
+
+                task.wait(0.5)
+            end
+        end)
+    end
+
+    local function stopMasking()
+        maskActive = false
+
+        if loopThread then pcall(function() task.cancel(loopThread) end); loopThread = nil end
+
+        for obj, origText in pairs(originalTexts) do
+            pcall(function()
+                obj.Text = origText
+            end)
+        end
+        originalTexts = {}
+    end
+
+    createSwitch(SlapContainer, "Hide Nicknames", false, 15, function(val)
+        if val then startMasking() else stopMasking() end
+    end)
+end
+
 -----------------------------------
 -- TAB: TELEPORT
 -----------------------------------
@@ -1930,6 +2111,30 @@ end)
 -- ESP LOGIC
 -----------------------------------
 RunService.RenderStepped:Connect(function()
+    if not menuIsOpen and UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+        pcall(function()
+            local dist = (Camera.CFrame.Position - Camera.Focus.Position).Magnitude
+            if dist > 2 and not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+                if not isShiftLockOptionEnabled() then
+                    UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+                else
+                    local controller = getMouseLockController()
+                    if controller then
+                        local isShiftLockActive = false
+                        if type(controller.GetIsMouseLocked) == "function" then
+                            isShiftLockActive = controller:GetIsMouseLocked()
+                        elseif type(controller.isMouseLocked) == "boolean" then
+                            isShiftLockActive = controller.isMouseLocked
+                        end
+                        if not isShiftLockActive then
+                            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
     if containerLayouts then
         for container, layout in pairs(containerLayouts) do
             if container.Visible then
